@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
-import fetch from 'node-fetch';
 
 const app = express();
 
@@ -8,7 +7,7 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 80;
 
 // 中间件设置
 app.use(bodyParser.text({ type: '*/*' }));
-// 如果需要静态文件服务，取消注释以下行
+// 如果需要静态文件服务，可以取消注释以下行
 // app.use(express.static('public'));
 // app.use(express.static('html'));
 
@@ -26,7 +25,7 @@ if (require.resolve('./api/aiyue')) app.get('/api/aiyue', require('./api/aiyue')
 if (require.resolve('./api/ireadnote')) app.get('/api/ireadnote', require('./api/ireadnote'));
 app.post('/api/ra', require('./api/ra'));
 
-// 在 app.ts 的 /tts 路由中
+// 中间件的新路由：/tts
 app.get('/tts', async (req, res) => {
   const { voiceName, voiceStyle, rate, text } = req.query;
 
@@ -38,7 +37,7 @@ app.get('/tts', async (req, res) => {
   const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="zh-CN"><voice name="${finalVoiceName}">${finalText}</voice></speak>`;
 
   try {
-    const raResponse: Buffer = await new Promise((resolve, reject) => {  // 显式声明类型为 Buffer
+    const raResponse: Buffer = await new Promise((resolve, reject) => {
       const raReq = {
         body: ssml,
         headers: {
@@ -47,7 +46,10 @@ app.get('/tts', async (req, res) => {
         },
       } as any;
       const raRes = {
-        status: (code: number) => ({ json: (data: any) => reject(data), end: (data: any) => resolve(data) }),
+        status: (code: number) => ({
+          json: (data: any) => reject(data),
+          end: (data: any) => resolve(data),
+        }),
         setHeader: () => {},
       } as any;
       require('./api/ra')(raReq, raRes);
@@ -55,7 +57,7 @@ app.get('/tts', async (req, res) => {
 
     res.set({
       'Content-Type': 'audio/mpeg',
-      'Content-Length': raResponse.length.toString(),  // 确保是字符串
+      'Content-Length': raResponse.length.toString(), // 转换为字符串
       'Content-Disposition': 'attachment; filename="tts_audio.mp3"',
     });
     res.send(raResponse);

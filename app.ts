@@ -26,19 +26,19 @@ if (require.resolve('./api/aiyue')) app.get('/api/aiyue', require('./api/aiyue')
 if (require.resolve('./api/ireadnote')) app.get('/api/ireadnote', require('./api/ireadnote'));
 app.post('/api/ra', require('./api/ra'));
 
-// 中间件的新路由：/tts
+// 在 app.ts 的 /tts 路由中
 app.get('/tts', async (req, res) => {
   const { voiceName, voiceStyle, rate, text } = req.query;
 
   const finalVoiceName = voiceName || 'zh-CN-XiaoxiaoNeural';
-  const finalVoiceStyle = voiceStyle || 'default'; // 未使用，但保留
-  const finalRate = rate || '0'; // 未使用，但保留
+  const finalVoiceStyle = voiceStyle || 'default';
+  const finalRate = rate || '0';
   const finalText = text || '测试文本';
 
   const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="zh-CN"><voice name="${finalVoiceName}">${finalText}</voice></speak>`;
 
   try {
-    const raResponse = await new Promise((resolve, reject) => {
+    const raResponse: Buffer = await new Promise((resolve, reject) => {  // 显式声明类型为 Buffer
       const raReq = {
         body: ssml,
         headers: {
@@ -55,13 +55,13 @@ app.get('/tts', async (req, res) => {
 
     res.set({
       'Content-Type': 'audio/mpeg',
-      'Content-Length': raResponse.length,
+      'Content-Length': raResponse.length.toString(),  // 确保是字符串
       'Content-Disposition': 'attachment; filename="tts_audio.mp3"',
     });
     res.send(raResponse);
   } catch (error) {
     console.error('TTS 请求失败:', error);
-    res.status(500).send('音频生成失败: ' + error.message);
+    res.status(500).send('音频生成失败: ' + (error as Error).message);
   }
 });
 

@@ -1,14 +1,13 @@
-version: '3'
-
 services:
-  ifreetimeTTS:
-    container_name: ifreetimeTTS
-    image: yunfinibol/ms-ra-forwarder-for-ifreetime
-    restart: unless-stopped
+  tts-service:
+    container_name: tts-service
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    # 如果可以保持自己的ip或者完整域名不公开的话，可以不用设置环境变量
-    environment: []
-    #需要的话把上边一行注释，下面两行取消注释
-    #environment: 
-    #  - TOKEN=自定义TOKEN
+      - "80:80"
+#    volumes:
+#      - /root/www:/app/html  # 如果不需要 html/，可以移除此行
+#    environment:
+#      - TOKEN=${TOKEN} # 可选
+    restart: unless-stopped

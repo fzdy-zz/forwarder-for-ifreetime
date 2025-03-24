@@ -1,23 +1,26 @@
-FROM node:slim as builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-COPY ./package*.json ./
+COPY package*.json ./
 RUN npm install
-COPY ./ ./
+COPY . .
 RUN npm run build
 
-FROM node:slim as production
+FROM node:18-alpine AS production
 
 WORKDIR /app
 
-COPY ./package*.json ./
+COPY package*.json ./
 RUN npm install --production
 
-COPY ./public ./public
 COPY --from=builder /app/dist ./dist
-ENV TOKEN= PORT=3000
+# 如果需要静态文件，取消注释以下行
+# COPY ./public ./public
+# COPY ./html ./html
 
-EXPOSE $PORT
+ENV PORT=80 TOKEN=
 
-CMD [ "node", "./dist/app.js" ]
+EXPOSE 80
+
+CMD ["npm", "run", "prod"]
